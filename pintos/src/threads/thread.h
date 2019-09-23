@@ -84,9 +84,7 @@ typedef int tid_t;
 
 
 /*Lista que contem alarmes a serem acordados*/
-
-struct list *alarmes;
-list_init(alarmes);
+struct list alarmes;
 
 struct thread
   {
@@ -101,7 +99,7 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
     int64_t tempo_acordar;              /* Tempo em ticks em que a thread devera ser acordada*/
-    struct list *alarmes = alarmes;               /* Endereco para lista de alarmes*/
+    struct list *alarmes;               /* Endereco para lista de alarmes*/
 
 
 #ifdef USERPROG
@@ -148,5 +146,12 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+/*Comparacao entre tempos de espera de threads*/
+/* Returns true if tempo_acordar A is less than tempo_acordar B, false
+   otherwise. */
+bool list_less_func_tempo_espera (const struct list_elem *a,
+                                  const struct list_elem *b,
+                                  void *aux);
 
 #endif /* threads/thread.h */

@@ -7,7 +7,7 @@
 #include "threads/interrupt.h"
 #include "threads/synch.h"
 #include "threads/thread.h" 
-  
+
 /* See [8254] for hardware details of the 8254 timer chip. */
 
 #if TIMER_FREQ < 19
@@ -96,9 +96,13 @@ timer_sleep (int64_t ticks)
 
   ASSERT (intr_get_level () == INTR_ON);
 
-  thread_current.tempo_acordar = final;
-  thread_yeld();
+  struct thread *t = thread_current();
   
+  t->tempo_acordar = final;
+  struct list *alarmes = t->alarmes;
+  
+  list_insert_ordered (alarmes, t, list_less_func_tempo_espera, NULL);
+  thread_yeld();
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be

@@ -37,6 +37,16 @@ static struct thread *initial_thread;
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
 
+/*Comparacao entre tempos de espera de threads*/
+/* Returns true if tempo_acordar A is less than tempo_acordar B, false
+   otherwise. */
+static bool list_less_func_tempo_espera (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED){
+  const struct thread *a = list_entry (a, struct thread, elem);
+  const struct thread *b = list_entry (b, struct thread, elem);
+
+  return a->tempo_acordar < b->tempo_acordar;
+}
+
 /* Stack frame for kernel_thread(). */
 struct kernel_thread_frame 
   {
@@ -92,6 +102,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  list_init (&alarmes);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -133,6 +144,10 @@ thread_tick (void)
 #endif
   else
     kernel_ticks++;
+
+  while(list_begin(t->alarmes)->tempo_acordar <= timer_ticks()){
+    proxima_thread(t);
+  }
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
@@ -200,6 +215,9 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
+
+  /* Lista com Timers*/
+  (*t).alarmes = &alarmes;
 
   return tid;
 }
