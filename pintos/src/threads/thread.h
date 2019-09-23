@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "kernel/list.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -80,6 +81,13 @@ typedef int tid_t;
    only because they are mutually exclusive: only a thread in the
    ready state is on the run queue, whereas only a thread in the
    blocked state is on a semaphore wait list. */
+
+
+/*Lista que contem alarmes a serem acordados*/
+
+struct list *alarmes;
+list_init(alarmes);
+
 struct thread
   {
     /* Owned by thread.c. */
@@ -92,6 +100,9 @@ struct thread
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
+    int64_t tempo_acordar;              /* Tempo em ticks em que a thread devera ser acordada*/
+    struct list *alarmes = alarmes;               /* Endereco para lista de alarmes*/
+
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
