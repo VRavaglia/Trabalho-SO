@@ -102,7 +102,7 @@ timer_sleep (int64_t ticks)
   struct list *alarmes = t->alarmes;
   
   list_insert_ordered (alarmes, t, list_less_func_tempo_espera, NULL);
-  thread_yeld();
+  thread_block();
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be

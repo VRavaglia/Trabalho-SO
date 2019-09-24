@@ -40,7 +40,7 @@ static struct lock tid_lock;
 /*Comparacao entre tempos de espera de threads*/
 /* Returns true if tempo_acordar A is less than tempo_acordar B, false
    otherwise. */
-static bool list_less_func_tempo_espera (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED){
+bool list_less_func_tempo_espera (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED){
   const struct thread *a = list_entry (a, struct thread, elem);
   const struct thread *b = list_entry (b, struct thread, elem);
 
@@ -145,8 +145,12 @@ thread_tick (void)
   else
     kernel_ticks++;
 
-  while(list_begin(t->alarmes)->tempo_acordar <= timer_ticks()){
-    proxima_thread(t);
+  /*Checa se o primeiro da fila de alarmes ja teve seu tempo atingido*/
+  struct thread *primeiro = list_entry (list_begin(t->alarmes), struct thread, elem);
+  while(primeiro->tempo_acordar <= timer_ticks()){
+    list_pop_front (primeiro->alarmes);
+    thread_unblock(primeiro);
+    primeiro = list_entry (list_begin(t->alarmes), struct thread, elem);
   }
 
   /* Enforce preemption. */
