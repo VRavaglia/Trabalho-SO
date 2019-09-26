@@ -43,6 +43,8 @@ Mateus Gilbert <email@domain.example>
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
 
+Ambos evitados interrompendo interrupcoees quando a insercao na lista de prioridade eh chamada.
+
 ---- RATIONALE ----
 
 Para checagem de tempo passado com precisão de ticks é necessário checar a cada tick se 

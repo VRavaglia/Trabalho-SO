@@ -11,6 +11,7 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
+#include "devices/timer.h"
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -28,6 +29,9 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+/*Lista de alarmes*/
+static struct list alarmes;
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -40,9 +44,9 @@ static struct lock tid_lock;
 /*Comparacao entre tempos de espera de threads*/
 /* Returns true if tempo_acordar A is less than tempo_acordar B, false
    otherwise. */
-bool list_less_func_tempo_espera (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED){
-  const struct thread *a = list_entry (a, struct thread, elem);
-  const struct thread *b = list_entry (b, struct thread, elem);
+bool list_less_func_tempo_espera (const struct list_elem *a_, const struct list_elem *b_, void *aux UNUSED){
+  const struct thread *a = list_entry (a_, struct thread, alarmelem);
+  const struct thread *b = list_entry (b_, struct thread, alarmelem);
 
   return a->tempo_acordar < b->tempo_acordar;
 }
@@ -97,6 +101,7 @@ static tid_t allocate_tid (void);
 void
 thread_init (void) 
 {
+
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
@@ -146,12 +151,15 @@ thread_tick (void)
     kernel_ticks++;
 
   /*Checa se o primeiro da fila de alarmes ja teve seu tempo atingido*/
-  struct thread *primeiro = list_entry (list_begin(t->alarmes), struct thread, elem);
-  while(primeiro->tempo_acordar <= timer_ticks()){
-    list_pop_front (primeiro->alarmes);
-    thread_unblock(primeiro);
-    primeiro = list_entry (list_begin(t->alarmes), struct thread, elem);
+  if (t->alarmes != NULL){
+    struct thread *primeiro = list_entry (list_begin(t->alarmes), struct thread, alarmelem);
+    while(primeiro->tempo_acordar >= 0 && primeiro->tempo_acordar <= timer_ticks()){
+      list_pop_front (primeiro->alarmes);
+      thread_unblock(primeiro);
+      primeiro = list_entry (list_begin(t->alarmes), struct thread, alarmelem);
+    }
   }
+  
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
@@ -220,8 +228,7 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
-  /* Lista com Timers*/
-  (*t).alarmes = &alarmes;
+
 
   return tid;
 }
@@ -485,6 +492,12 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+
+   /* Lista com Timers*/
+
+  t->alarmes = &alarmes;
+  t->tempo_acordar = -1;
+  ASSERT(t->alarmes != NULL);
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);

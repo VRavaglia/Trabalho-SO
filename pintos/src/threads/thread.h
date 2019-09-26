@@ -82,10 +82,6 @@ typedef int tid_t;
    ready state is on the run queue, whereas only a thread in the
    blocked state is on a semaphore wait list. */
 
-
-/*Lista que contem alarmes a serem acordados*/
-struct list alarmes;
-
 struct thread
   {
     /* Owned by thread.c. */
@@ -98,6 +94,8 @@ struct thread
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
+
+    struct list_elem alarmelem;
     int64_t tempo_acordar;              /* Tempo em ticks em que a thread devera ser acordada*/
     struct list *alarmes;               /* Endereco para lista de alarmes*/
 
