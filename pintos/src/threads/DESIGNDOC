@@ -7,7 +7,7 @@
 ---- GROUP ----
 
 Victor Raposo victor.ravaglia@poli.ufrj.br
-Mateus Gilbert <email@domain.example>
+Mateus da Silva Gilbert <email@domain.example>
 
 ---- PRELIMINARIES ----
 
@@ -27,13 +27,30 @@ Mateus Gilbert <email@domain.example>
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+São referidas como alarmes as threads que requistaram a função de acordar em um determinado tempo.
+
+Mebros novos:
+
+/*struct thread*/
+struct list_elem alarmelem;         /*Elemento referente a um alarme que devera ser acordado*/
+int64_t tempo_acordar;              /* Tempo em ticks em que a thread devera ser acordada*/
+struct list *alarmes;               /* Endereco para lista de alarmes*/
+
+
+
 ---- ALGORITHMS ----
 
 >> A2: Briefly describe what happens in a call to timer_sleep(),
 >> including the effects of the timer interrupt handler.
 
+A thread que que chama a função passa a dormir e vai para uma lista encadeada e ordenada. A ordenação desta fila é feita levando em conta o tempo em que a thread correspondente deverá ser acordada.
+
+A cada tick, o primeiro endereco da fila é checado para verificar se o tempo de espera da primeira thread ja foi alcancado. Se sim, ela é acordada, removida da fila e a seguinte thread é checada e assim sucessivamente.
+
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
+
+Usando uma lista ordenada só é preciso fazer uma comparação por tick para saber se uma thread deve ser acordada.
 
 ---- SYNCHRONIZATION ----
 
@@ -53,7 +70,7 @@ uma thread que é executada a cada tick. Duas escolhas foram feitas para uma mai
 do algorítimo:
 
 Usar uma lista ordenada para agrupar os alarmes, deste modo a complexidade O(N) só acontece
-quando um novo alarme é criado em vez de em cada tick. Isso possibilita checar apenas o primeiro
+quando um novo alarme é criado em vez de a cada tick. Isso possibilita checar apenas o primeiro
 da fila e se ele for elegível checar o próximo e assim por diante liberando os alarmes.
 
 Em vez de cada alarme ter seu próprio contador que deveria ser incrementado, quando criada,
