@@ -25,6 +25,8 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
+#define DEBUG true
+
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -90,6 +92,7 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
+    int prioridade_original;             /* Prioridade antes da doacao*/
     struct list_elem allelem;           /* List element for all threads list. */
 
     /* Shared between thread.c and synch.c. */
@@ -98,6 +101,9 @@ struct thread
     struct list_elem alarmelem;
     int64_t tempo_acordar;              /* Tempo em ticks em que a thread devera ser acordada*/
     struct list *alarmes;               /* Endereco para lista de alarmes*/
+
+    int nice;                           /* Valor de Nice (usado para mlfqs)*/
+    int recent_cpu;                     /* Tempo de cpu utilizado recentemente*/
 
 
 #ifdef USERPROG
@@ -139,6 +145,9 @@ void thread_foreach (thread_action_func *, void *);
 
 int thread_get_priority (void);
 void thread_set_priority (int);
+
+int thread_att_mlfqs (struct thread *t);
+void thread_calc_recent_cpu(struct thread *t);
 
 int thread_get_nice (void);
 void thread_set_nice (int);

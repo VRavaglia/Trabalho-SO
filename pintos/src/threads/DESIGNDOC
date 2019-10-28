@@ -112,6 +112,18 @@ da espera, reduzindo a complexidade de O(N) para O(1).
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
+--- Processo ---
+
+Primeiramente garantir que o scheduler sempre execute a thread com maior
+prioridade, para isso a inserção na fila de prontas foi modificada para
+ser ordenada.
+
+Se uma thread criada tiver uma prioridade menor do que uma que está na fila
+de espera ela deve dar yield.
+
+
+
+
 			  ADVANCED SCHEDULER
 			  ==================
 

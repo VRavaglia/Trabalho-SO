@@ -196,8 +196,16 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  
   sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+  struct thread *t = thread_current ();
+  if(lock->holder != NULL){
+    if (DEBUG) printf("\n\n\n\nholder: %d candidato: %d\n\n\n\n\n", lock->holder->prioridade_original, t->prioridade_original);
+    if (lock->holder->prioridade_original < t->prioridade_original){
+      lock->holder->priority = t->priority;
+    }
+  }
+  lock->holder = t;
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -215,8 +223,9 @@ lock_try_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
 
   success = sema_try_down (&lock->semaphore);
-  if (success)
-    lock->holder = thread_current ();
+  if (success){
+    lock->holder = thread_current ();;
+  }
   return success;
 }
 
@@ -230,6 +239,9 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
+
+  struct thread *t = thread_current ();
+  t->priority = t->prioridade_original;
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);
