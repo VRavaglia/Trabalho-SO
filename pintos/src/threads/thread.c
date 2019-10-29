@@ -182,16 +182,23 @@ thread_tick (void)
   }
 
   if(thread_mlfqs){
+    // Incrementa o valor de recent_cpu a cada tick 
     if(t != idle_thread){
       t->recent_cpu = add_fp (t->recent_cpu, int_to_fp(1));
     }
+
+    // Atua em todas as threads a cada segundo
     if(timer_ticks () % TIMER_FREQ == 0){
       size_t ready_threads = list_size(&ready_list);
+
+      // Conta a thread atual
       if (t != idle_thread){
         ready_threads++;
       }
-      struct thread j*;
+      struct thread *j;
       struct list_elem *elem = list_begin (&all_list);
+
+      // Para cada thread
       for (; elem != list_end (&all_list); elem = list_next (elem)){
           j = list_entry(elem, struct thread, allelem);
           if (j != idle_thread){
@@ -410,7 +417,7 @@ void
 thread_set_priority (int new_priority) 
 {
   if(thread_mlfqs){
-    return
+    return;
   }
 
   thread_current ()->priority = new_priority;
@@ -438,7 +445,7 @@ thread_garante_maior_prioridade(void){
   if(!list_empty (&ready_list)){
     if (thread_current()->priority < list_entry (list_front (&ready_list), struct thread, elem)->priority){
       thread_yield ();
-      if (DEBUG) printf("Atual Yield");
+      if (DEBUG) printf("Troca de threads na criacao");
     }  
   }
   intr_set_level (old_level);
@@ -449,14 +456,11 @@ thread_garante_maior_prioridade(void){
 int
 thread_att_mlfqs (struct thread *t){
   if (t == idle_thread){
-    return;
+    return 0;
   }
 
-  ASSERT (thread_mlfqs);
-  ASSERT (t != idle_thread);
-
-  int cpu_recente = thread_recent_cpu();
-  int pri = fp_to_int_near(sub_fp(int_to_fp(PRI_MAX),sub_fp_int(div_fp_int(cpu_recente, 4), nice*2)));
+  int cpu_recente = thread_get_recent_cpu();
+  int pri = fp_to_int_near(sub_fp(int_to_fp(PRI_MAX),sub_fp_int(div_fp_int(cpu_recente, 4), t->nice*2)));
   if(pri < PRI_MIN){
     pri = PRI_MIN;
   }
@@ -467,19 +471,21 @@ thread_att_mlfqs (struct thread *t){
   return pri;
 }
 
-
+// Calcula recent_cpu
 void
 thread_calc_recent_cpu(struct thread *t){
-  ASSERT (thread_mlfqs);
-  ASSERT (t != idle_thread);
+  if (t == idle_thread){
+    return 0;
+  }
 
   int peso_load = div_fp(mult_fp_int(load_avg, 2), add_fp(mult_fp_int(load_avg, 2), int_to_fp(1)));
-  t-recent_cpu = add_fp_int(mult_fp(peso_load, t-recent_cpu), t->nice)
+  t->recent_cpu = add_fp_int(mult_fp(peso_load, t->recent_cpu), t->nice);
 }
 
+
+// Calcula load_avg
 void
 thread_calc_load_avg(int ready_threads){
-  ASSERT (thread_mlfqs);
   load_avg = add_fp(mult_fp(div_fp(int_to_fp(59), int_to_fp(60)), load_avg),mult_fp(div_fp(int_to_fp(1), int_to_fp(60)), int_to_fp(ready_threads)));
 }
 

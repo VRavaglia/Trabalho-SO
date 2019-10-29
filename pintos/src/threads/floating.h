@@ -1,7 +1,7 @@
 #ifndef THREADS_FLOATING
 #define THREADS_FLOATING
 
-#define F = 16384;
+#define F 16384
 
 int
 int_to_fp(int n){
@@ -28,7 +28,7 @@ add_fp(int x, int y){
 }
 
 int
-sub_fp(int x, int, y){
+sub_fp(int x, int y){
 	return (x - y);
 }
 
@@ -44,17 +44,17 @@ sub_fp_int(int x, int n){
 
 int
 mult_fp(int x, int y){
-	return ((int64_t)x)*y/F;
+	return (((int64_t)x)*y/F);
 }
 
 int
-mult_fp_int(int x, int y){
+mult_fp_int(int x, int n){
 	return x*n;
 }
 
 int
 div_fp(int x, int y){
-	return ((int64_t)x)*F/y;
+	return (((int64_t)x)*F/y);
 }
 
 int
