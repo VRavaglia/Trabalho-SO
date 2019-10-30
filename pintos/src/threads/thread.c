@@ -460,7 +460,11 @@ thread_att_mlfqs (struct thread *t){
   }
 
   int cpu_recente = thread_get_recent_cpu();
+
+  // Calculo aritimetico da prioridade
   int pri = fp_to_int_near(sub_fp(int_to_fp(PRI_MAX),sub_fp_int(div_fp_int(cpu_recente, 4), t->nice*2)));
+
+  // Limitar a prioridade
   if(pri < PRI_MIN){
     pri = PRI_MIN;
   }
@@ -478,6 +482,7 @@ thread_calc_recent_cpu(struct thread *t){
     return 0;
   }
 
+  // Como recomendado no documento primeiro a multiplicacao
   int peso_load = div_fp(mult_fp_int(load_avg, 2), add_fp(mult_fp_int(load_avg, 2), int_to_fp(1)));
   t->recent_cpu = add_fp_int(mult_fp(peso_load, t->recent_cpu), t->nice);
 }
