@@ -148,7 +148,7 @@ void thread_set_priority (int);
 
 int thread_att_mlfqs (struct thread *t);
 void thread_calc_recent_cpu(struct thread *t);
-void thread_garante_maior_prioridade(void);
+void thread_maior_prioridade(void);
 void thread_calc_load_avg(int ready_threads);
 
 int thread_get_nice (void);

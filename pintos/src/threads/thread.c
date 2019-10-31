@@ -279,7 +279,7 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
-  thread_garante_maior_prioridade();
+  thread_maior_prioridade();
   
   if (DEBUG) printf("\n\nthread atual depois disable: %s\n\n", thread_current()->name);
   return tid;
@@ -383,6 +383,12 @@ void
 thread_yield (void) 
 {
   struct thread *cur = thread_current ();
+    if(!list_empty(&ready_list)){
+    if (cur->priority <= list_entry (list_front (&ready_list), struct thread, elem)->priority){
+      return;
+    }
+  }
+  if (DEBUG) printf("\n\nDentro yield, atual %s", cur->name);
   enum intr_level old_level;
   
   ASSERT (!intr_context ());
@@ -390,6 +396,7 @@ thread_yield (void)
   old_level = intr_disable ();
   if (cur != idle_thread) 
     list_insert_ordered (&ready_list, &cur->elem, list_bigger_func_prioridade, NULL);
+  if (DEBUG) printf("\nDentro yield, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -438,13 +445,28 @@ thread_get_priority (void)
   return t->priority;
 }
 
-//Checa se a thread atual tem maior prioridade que a do topo da lista de prontas
+//Checa se a thread atual tem maior prioridade que a do topo da lista de prontas e da yield se necessario
 void
-thread_garante_maior_prioridade(void){
+thread_maior_prioridade(void){
   enum intr_level old_level = intr_disable ();
   if(!list_empty (&ready_list)){
     if (thread_current()->priority < list_entry (list_front (&ready_list), struct thread, elem)->priority){
-      thread_yield ();
+      //switch_threads (thread_current(), list_entry (list_front (&ready_list), struct thread, elem));
+      
+      // struct thread *cur = running_thread ();
+      // struct thread *prev = NULL;
+
+      // list_insert_ordered (&ready_list, &cur->elem, list_bigger_func_prioridade, NULL);
+      // cur->status = THREAD_READY;
+
+      // struct thread *next = list_entry (list_pop_front (&ready_list), struct thread, elem);
+
+      // if (cur != next)
+      //   prev = switch_threads (cur, next);
+      // thread_schedule_tail (prev);
+
+      thread_yield();
+
       if (DEBUG) printf("Troca de threads na criacao");
     }  
   }
@@ -504,7 +526,7 @@ thread_set_nice (int new_nice)
   struct thread *t = thread_current ();
   t->nice = new_nice;
   t->priority = thread_att_mlfqs(t);
-  thread_garante_maior_prioridade();
+  thread_maior_prioridade();
   intr_set_level (old_level);
 
 }
@@ -720,6 +742,8 @@ schedule (void)
   struct thread *next = next_thread_to_run ();
   struct thread *prev = NULL;
 
+
+
   ASSERT (intr_get_level () == INTR_OFF);
   ASSERT (cur->status != THREAD_RUNNING);
   ASSERT (is_thread (next));
@@ -727,6 +751,7 @@ schedule (void)
   if (cur != next)
     prev = switch_threads (cur, next);
   thread_schedule_tail (prev);
+  if(DEBUG) printf("Dentro Schedule, Atual %s: Proxima: %s, Atual agora: %s\n\n", cur->name, next->name, thread_current()->name);
 }
 
 /* Returns a tid to use for a new thread. */
