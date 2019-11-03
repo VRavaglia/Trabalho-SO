@@ -211,9 +211,11 @@ thread_tick (void)
     
   }  
 
-  /* Enforce preemption. */
-  if (++thread_ticks >= TIME_SLICE)
-    intr_yield_on_return ();
+  if(!list_empty(&ready_list)){
+    if(t->priority < list_entry(list_front(&ready_list), struct thread, elem)->priority){
+      intr_yield_on_return ();
+    }
+  }
 }
 
 /* Prints thread statistics. */
@@ -277,7 +279,10 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   /* Add to run queue. */
+  if (DEBUG) printf("\n\nthread atual antes disable: %s\n\n", thread_current()->name);
   thread_unblock (t);
+
+  if(DEBUG) printf("\ndepois unblock\n");
 
   thread_maior_prioridade();
   
@@ -312,6 +317,7 @@ thread_block (void)
 void
 thread_unblock (struct thread *t) 
 {
+  if(DEBUG) printf("\nunblock: %s\n", t->name);
   enum intr_level old_level;
 
   ASSERT (is_thread (t));
@@ -383,20 +389,16 @@ void
 thread_yield (void) 
 {
   struct thread *cur = thread_current ();
-    if(!list_empty(&ready_list)){
-    if (cur->priority <= list_entry (list_front (&ready_list), struct thread, elem)->priority){
-      return;
-    }
-  }
-  if (DEBUG) printf("\n\nDentro yield, atual %s", cur->name);
+  if (DEBUG) printf("\nDentro yield, antes, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
   enum intr_level old_level;
   
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  if (cur != idle_thread) 
+  if (cur != idle_thread){ 
     list_insert_ordered (&ready_list, &cur->elem, list_bigger_func_prioridade, NULL);
-  if (DEBUG) printf("\nDentro yield, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
+  }
+  if (DEBUG) printf("\nDentro yield, depois, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -448,29 +450,24 @@ thread_get_priority (void)
 //Checa se a thread atual tem maior prioridade que a do topo da lista de prontas e da yield se necessario
 void
 thread_maior_prioridade(void){
+  bool inter_off = true;
   enum intr_level old_level = intr_disable ();
   if(!list_empty (&ready_list)){
     if (thread_current()->priority < list_entry (list_front (&ready_list), struct thread, elem)->priority){
-      //switch_threads (thread_current(), list_entry (list_front (&ready_list), struct thread, elem));
-      
-      // struct thread *cur = running_thread ();
-      // struct thread *prev = NULL;
+      inter_off = false;
+      intr_set_level (old_level);
+      if (intr_context()) {
+        intr_yield_on_return ();
+      } else {
 
-      // list_insert_ordered (&ready_list, &cur->elem, list_bigger_func_prioridade, NULL);
-      // cur->status = THREAD_READY;
-
-      // struct thread *next = list_entry (list_pop_front (&ready_list), struct thread, elem);
-
-      // if (cur != next)
-      //   prev = switch_threads (cur, next);
-      // thread_schedule_tail (prev);
-
-      thread_yield();
-
-      if (DEBUG) printf("Troca de threads na criacao");
+        thread_yield ();
+      }
+      if (DEBUG) printf("\nTroca de threads na criacao\n");
     }  
   }
-  intr_set_level (old_level);
+  if (inter_off) {
+    intr_set_level (old_level);
+  }
 }
 
 
@@ -738,12 +735,13 @@ thread_schedule_tail (struct thread *prev)
 static void
 schedule (void) 
 {
+  
   struct thread *cur = running_thread ();
   struct thread *next = next_thread_to_run ();
   struct thread *prev = NULL;
+  
 
-
-
+  
   ASSERT (intr_get_level () == INTR_OFF);
   ASSERT (cur->status != THREAD_RUNNING);
   ASSERT (is_thread (next));
@@ -751,7 +749,6 @@ schedule (void)
   if (cur != next)
     prev = switch_threads (cur, next);
   thread_schedule_tail (prev);
-  if(DEBUG) printf("Dentro Schedule, Atual %s: Proxima: %s, Atual agora: %s\n\n", cur->name, next->name, thread_current()->name);
 }
 
 /* Returns a tid to use for a new thread. */
