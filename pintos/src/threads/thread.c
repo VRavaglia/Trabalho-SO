@@ -279,14 +279,42 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   /* Add to run queue. */
-  if (DEBUG) printf("\n\nthread atual antes disable: %s\n\n", thread_current()->name);
-  thread_unblock (t);
+  if (DEBUG) printf("\nthread atual antes block: %s\n", thread_current()->name);
+  if (DEBUG) printf("Tamahno ready%d\n", list_size(&ready_list));
+  if(!list_empty(&ready_list)){
+    if (DEBUG) printf("primeira ready%s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
+  }
+  //thread_unblock (t);
 
-  if(DEBUG) printf("\ndepois unblock\n");
 
+
+  enum intr_level old_level;
+
+  ASSERT (is_thread (t));
+
+  old_level = intr_disable ();
+  ASSERT (t->status == THREAD_BLOCKED);
+  list_insert_ordered (&ready_list, &t->elem, list_bigger_func_prioridade, NULL);
+  if (DEBUG) printf("\nthread atual dentro  block: %s\n", thread_current()->name);
+  
+  t->status = THREAD_READY;
+  if (DEBUG) printf("Tamahno ready antes oldevelve %d\n", list_size(&ready_list));
+  intr_set_level (old_level);
+  if (DEBUG) printf("Tamahno ready depois setlevel%d\n", list_size(&ready_list));
+
+
+  if (DEBUG) printf("\nthread atual depois block: %s\n", thread_current()->name);
+  if (DEBUG) printf("Tamahno ready%d\n", list_size(&ready_list));
+  if(!list_empty(&ready_list)){
+    if (DEBUG) printf("primeira ready%s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
+  }
   thread_maior_prioridade();
   
-  if (DEBUG) printf("\n\nthread atual depois disable: %s\n\n", thread_current()->name);
+  if (DEBUG) printf("\ndepois maior prioridade: %s\n", thread_current()->name);
+  if (DEBUG) printf("Tamahno ready%d\n", list_size(&ready_list));
+  if(!list_empty(&ready_list)){
+    if (DEBUG) printf("primeira ready%s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
+  }
   return tid;
 }
 
@@ -317,7 +345,7 @@ thread_block (void)
 void
 thread_unblock (struct thread *t) 
 {
-  if(DEBUG) printf("\nunblock: %s\n", t->name);
+  //if(DEBUG) printf("\nunblock: %s\n", t->name);
   enum intr_level old_level;
 
   ASSERT (is_thread (t));
@@ -325,6 +353,10 @@ thread_unblock (struct thread *t)
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
   list_insert_ordered (&ready_list, &t->elem, list_bigger_func_prioridade, NULL);
+  if (DEBUG) printf("\nthread atual dentro  block: %s\n", thread_current()->name);
+  if(!list_empty(&ready_list)){
+    if (DEBUG) printf("primeira ready: %s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
+  }
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -389,7 +421,7 @@ void
 thread_yield (void) 
 {
   struct thread *cur = thread_current ();
-  if (DEBUG) printf("\nDentro yield, antes, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
+  //if (DEBUG) printf("\nDentro yield, antes, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
   enum intr_level old_level;
   
   ASSERT (!intr_context ());
@@ -398,7 +430,7 @@ thread_yield (void)
   if (cur != idle_thread){ 
     list_insert_ordered (&ready_list, &cur->elem, list_bigger_func_prioridade, NULL);
   }
-  if (DEBUG) printf("\nDentro yield, depois, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
+  //if (DEBUG) printf("\nDentro yield, depois, primeiro lista ready %s, tamanho %d\n\n", list_entry (list_front (&ready_list), struct thread, elem)->name, list_size(&ready_list));
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -430,6 +462,8 @@ thread_set_priority (int new_priority)
   }
 
   thread_current ()->priority = new_priority;
+  thread_maior_prioridade();
+  //if(DEBUG) printf("\nPrioridade nova%d\n", thread_current()->priority);
 }
 
 /* Returns the current thread's priority. */
@@ -443,31 +477,21 @@ thread_get_priority (void)
   }
 
 
-  if (DEBUG) printf("\n\n\n\nget_priority %s: p: %d po: %d\n\n\n\n\n", t->name, t->priority, t->prioridade_original);
+  //if (DEBUG) printf("\n\n\n\nget_priority %s: p: %d po: %d\n\n\n\n\n", t->name, t->priority, t->prioridade_original);
   return t->priority;
 }
 
 //Checa se a thread atual tem maior prioridade que a do topo da lista de prontas e da yield se necessario
 void
 thread_maior_prioridade(void){
-  bool inter_off = true;
   enum intr_level old_level = intr_disable ();
   if(!list_empty (&ready_list)){
     if (thread_current()->priority < list_entry (list_front (&ready_list), struct thread, elem)->priority){
-      inter_off = false;
-      intr_set_level (old_level);
-      if (intr_context()) {
-        intr_yield_on_return ();
-      } else {
-
         thread_yield ();
-      }
       if (DEBUG) printf("\nTroca de threads na criacao\n");
     }  
   }
-  if (inter_off) {
-    intr_set_level (old_level);
-  }
+  intr_set_level (old_level);
 }
 
 
@@ -644,7 +668,7 @@ init_thread (struct thread *t, const char *name, int priority)
   ASSERT(t->alarmes != NULL);
 
   t->prioridade_original = priority;
-  if(DEBUG) printf("\n\n\n\ninit: %s: p: %d po: %d\n\n\n\n\n", t->name, t->priority, t->prioridade_original);
+  //if(DEBUG) printf("\n\n\n\ninit: %s: p: %d po: %d\n\n\n\n\n", t->name, t->priority, t->prioridade_original);
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
