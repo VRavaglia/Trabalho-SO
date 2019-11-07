@@ -211,11 +211,11 @@ thread_tick (void)
     
   }  
 
-  if(!list_empty(&ready_list)){
-    if(t->priority < list_entry(list_front(&ready_list), struct thread, elem)->priority){
-      intr_yield_on_return ();
-    }
-  }
+  // if(!list_empty(&ready_list)){
+  //   if(t->priority < list_entry(list_front(&ready_list), struct thread, elem)->priority){
+  //     intr_yield_on_return ();
+  //   }
+  // }
 }
 
 /* Prints thread statistics. */
@@ -284,37 +284,16 @@ thread_create (const char *name, int priority,
   if(!list_empty(&ready_list)){
     if (DEBUG) printf("primeira ready%s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
   }
-  //thread_unblock (t);
-
-
-
-  enum intr_level old_level;
-
-  ASSERT (is_thread (t));
-
-  old_level = intr_disable ();
-  ASSERT (t->status == THREAD_BLOCKED);
-  list_insert_ordered (&ready_list, &t->elem, list_bigger_func_prioridade, NULL);
-  if (DEBUG) printf("\nthread atual dentro  block: %s\n", thread_current()->name);
-  
-  t->status = THREAD_READY;
-  if (DEBUG) printf("Tamahno ready antes oldevelve %d\n", list_size(&ready_list));
-  intr_set_level (old_level);
-  if (DEBUG) printf("Tamahno ready depois setlevel%d\n", list_size(&ready_list));
-
-
-  if (DEBUG) printf("\nthread atual depois block: %s\n", thread_current()->name);
-  if (DEBUG) printf("Tamahno ready%d\n", list_size(&ready_list));
-  if(!list_empty(&ready_list)){
-    if (DEBUG) printf("primeira ready%s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
-  }
+  if (DEBUG) printf("t status antes unblock: %d\n", t->status);
+  thread_unblock (t);
+  if (DEBUG) printf("t status depois unblock: %d\n", t->status);
+  enum intr_level old_level = intr_disable ();
   thread_maior_prioridade();
+  intr_set_level (old_level);
   
   if (DEBUG) printf("\ndepois maior prioridade: %s\n", thread_current()->name);
   if (DEBUG) printf("Tamahno ready%d\n", list_size(&ready_list));
-  if(!list_empty(&ready_list)){
-    if (DEBUG) printf("primeira ready%s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
-  }
+  if (DEBUG) printf("t status: %d\n", t->status);
   return tid;
 }
 
@@ -329,7 +308,9 @@ thread_block (void)
 {
   ASSERT (!intr_context ());
   ASSERT (intr_get_level () == INTR_OFF);
-
+  if(thread_current() != idle_thread){
+    if (DEBUG) printf("\nBLOCK: %s\n", thread_current()->name);
+  }
   thread_current ()->status = THREAD_BLOCKED;
   schedule ();
 }
@@ -656,6 +637,7 @@ init_thread (struct thread *t, const char *name, int priority)
 
   memset (t, 0, sizeof *t);
   t->status = THREAD_BLOCKED;
+  if (DEBUG) printf("init t status: %d\n", t->status);
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
@@ -668,7 +650,7 @@ init_thread (struct thread *t, const char *name, int priority)
   ASSERT(t->alarmes != NULL);
 
   t->prioridade_original = priority;
-  //if(DEBUG) printf("\n\n\n\ninit: %s: p: %d po: %d\n\n\n\n\n", t->name, t->priority, t->prioridade_original);
+  if(DEBUG) printf("\n\ninit: %s: p: %d po: %d\n\n", t->name, t->priority, t->prioridade_original);
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);

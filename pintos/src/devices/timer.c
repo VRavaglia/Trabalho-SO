@@ -106,7 +106,6 @@ timer_sleep (int64_t ticks)
   old_level = intr_disable ();
   
   list_insert_ordered (alarmes, &(t->alarmelem), list_less_func_tempo_espera, NULL);
-
   
   thread_block();
   intr_set_level (old_level);
