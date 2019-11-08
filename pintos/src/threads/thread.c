@@ -279,21 +279,25 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   /* Add to run queue. */
-  if (DEBUG) printf("\nthread atual antes block: %s\n", thread_current()->name);
-  if (DEBUG) printf("Tamahno ready%d\n", list_size(&ready_list));
-  if(!list_empty(&ready_list)){
-    if (DEBUG) printf("primeira ready%s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
-  }
-  if (DEBUG) printf("t status antes unblock: %d\n", t->status);
   thread_unblock (t);
-  if (DEBUG) printf("t status depois unblock: %d\n", t->status);
-  enum intr_level old_level = intr_disable ();
-  thread_maior_prioridade();
-  intr_set_level (old_level);
+  //thread_maior_prioridade();
+  if(thread_current()->priority < t->priority){
+    enum intr_level old_level = intr_disable ();
+    struct thread *cur = running_thread ();
+    struct thread *next = t;
+    struct thread *prev = NULL;
+    
+    ASSERT (intr_get_level () == INTR_OFF);
+    ASSERT (cur->status != THREAD_RUNNING);
+    ASSERT (is_thread (next));
+
+    if (cur != next)
+      prev = switch_threads (cur, next);
+    thread_schedule_tail (prev);
+    intr_set_level (old_level);
+  }
   
-  if (DEBUG) printf("\ndepois maior prioridade: %s\n", thread_current()->name);
-  if (DEBUG) printf("Tamahno ready%d\n", list_size(&ready_list));
-  if (DEBUG) printf("t status: %d\n", t->status);
+
   return tid;
 }
 
