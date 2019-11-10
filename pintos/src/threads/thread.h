@@ -25,7 +25,7 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
-#define DEBUG true
+#define DEBUG false
 
 /* A kernel thread or user process.
 
@@ -105,6 +105,8 @@ struct thread
     int nice;                           /* Valor de Nice (usado para mlfqs)*/
     int recent_cpu;                     /* Tempo de cpu utilizado recentemente*/
 
+    struct list locks;                  /* Lista de locks que a thread possui*/
+
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
@@ -162,5 +164,9 @@ int thread_get_load_avg (void);
 bool list_less_func_tempo_espera (const struct list_elem *a,
                                   const struct list_elem *b,
                                   void *aux);
+
+
+// Ordena a lista por prioridade
+void ordena_prioridade (struct list *);
 
 #endif /* threads/thread.h */

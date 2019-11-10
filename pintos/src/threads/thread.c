@@ -63,6 +63,16 @@ bool list_bigger_func_prioridade (const struct list_elem *a_, const struct list_
   return a->priority > b->priority;
 }
 
+
+// Ordena lista por prioridade
+void ordena_prioridade (struct list *lista)
+{
+  if (list_empty (lista))
+    return;
+
+  list_sort (lista, list_bigger_func_prioridade, NULL);
+}
+
 /* Stack frame for kernel_thread(). */
 struct kernel_thread_frame 
   {
@@ -280,22 +290,7 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
-  //thread_maior_prioridade();
-  if(thread_current()->priority < t->priority){
-    enum intr_level old_level = intr_disable ();
-    struct thread *cur = running_thread ();
-    struct thread *next = t;
-    struct thread *prev = NULL;
-    
-    ASSERT (intr_get_level () == INTR_OFF);
-    ASSERT (cur->status != THREAD_RUNNING);
-    ASSERT (is_thread (next));
-
-    if (cur != next)
-      prev = switch_threads (cur, next);
-    thread_schedule_tail (prev);
-    intr_set_level (old_level);
-  }
+  thread_maior_prioridade();
   
 
   return tid;
@@ -472,6 +467,7 @@ thread_maior_prioridade(void){
   enum intr_level old_level = intr_disable ();
   if(!list_empty (&ready_list)){
     if (thread_current()->priority < list_entry (list_front (&ready_list), struct thread, elem)->priority){
+      if (DEBUG) printf("\ntopo %s\n", list_entry (list_front (&ready_list), struct thread, elem)->name);
         thread_yield ();
       if (DEBUG) printf("\nTroca de threads na criacao\n");
     }  
@@ -645,6 +641,8 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
+  t->prioridade_original = priority;
+  list_init (&t->locks);
   t->magic = THREAD_MAGIC;
 
    /* Lista com Timers*/
@@ -653,7 +651,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->tempo_acordar = -1;
   ASSERT(t->alarmes != NULL);
 
-  t->prioridade_original = priority;
+  
   if(DEBUG) printf("\n\ninit: %s: p: %d po: %d\n\n", t->name, t->priority, t->prioridade_original);
 
   old_level = intr_disable ();
