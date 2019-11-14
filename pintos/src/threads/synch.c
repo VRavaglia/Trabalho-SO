@@ -269,6 +269,7 @@ lock_release (struct lock *lock)
       //if(DEBUG) printf("\nSize: %d, prio: %d\n", list_size(&t->locks), maior->maior_prioridade);
     }
   }
+  thread_maior_prioridade();
 
 }
 

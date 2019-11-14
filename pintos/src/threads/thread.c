@@ -218,8 +218,8 @@ thread_tick (void)
           j = list_entry(elem, struct thread, allelem);
           if (j != idle_thread){
               thread_calc_recent_cpu (j);
-              if(j->name[0] != 'm'){
-                //printf("\nnome|pri|calc:%s|%d|%d", j->name,j->priority, PRI_MAX - fp_to_int_near (j->recent_cpu / 4) - t->nice * 2);  
+              if(j->name[0] != 'j'){
+                //printf("\nnome|pri:%s|%d|", j->name,j->priority);  
               }
             }
         }
