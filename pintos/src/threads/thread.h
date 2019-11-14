@@ -165,6 +165,9 @@ bool list_less_func_tempo_espera (const struct list_elem *a,
                                   const struct list_elem *b,
                                   void *aux);
 
+/*Comparacao entre prioridades*/
+bool list_bigger_func_prioridade (const struct list_elem *a_, const struct list_elem *b_, void *aux);
+
 
 // Ordena a lista por prioridade
 void ordena_prioridade (struct list *);

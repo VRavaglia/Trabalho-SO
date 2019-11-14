@@ -181,6 +181,8 @@ lock_init (struct lock *lock)
 
   lock->holder = NULL;
   sema_init (&lock->semaphore, 1);
+
+  lock->maior_prioridade = PRI_MIN;
 }
 
 /* Acquires LOCK, sleeping until it becomes available if
@@ -199,14 +201,20 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
 
   if(lock->holder != NULL){
-    if (lock->holder->prioridade_original < thread_current()->prioridade_original){
-      lock->holder->priority = thread_current()->prioridade_original;
+    if (lock->holder->priority < thread_current()->priority){
+      lock->holder->priority = thread_current()->priority;
       thread_maior_prioridade();
     }
   }
 
+  if (thread_current()->priority > lock->maior_prioridade){
+    lock->maior_prioridade = thread_current()->priority;
+  }
+
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
+
+
 
   list_push_back (&lock->holder->locks, &lock->lock_elem);
 }
@@ -241,8 +249,7 @@ void
 lock_release (struct lock *lock) 
 {
   struct thread *t = thread_current ();
-  struct list_elem *maior;
-  struct lock *outro;
+  struct lock *maior;
 
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
@@ -251,14 +258,17 @@ lock_release (struct lock *lock)
   sema_up (&lock->semaphore);
 
   list_remove (&lock->lock_elem);
-  if (list_empty (&t->locks))
+  if (list_empty (&t->locks)){
     thread_set_priority (t->prioridade_original);
+  }
   else
-    {
-      maior = list_max (&t->locks, lock_maior_prioridade, NULL);
-      outro = list_entry (maior, struct lock, lock_elem);
-      thread_set_priority (outro->maior_prioridade);
+  {
+    maior = list_entry (list_max (&t->locks, lock_maior_prioridade, NULL), struct lock, lock_elem);
+    thread_set_priority (maior->maior_prioridade);
+    if(maior->maior_prioridade > 31){
+      //if(DEBUG) printf("\nSize: %d, prio: %d\n", list_size(&t->locks), maior->maior_prioridade);
     }
+  }
 
 }
 

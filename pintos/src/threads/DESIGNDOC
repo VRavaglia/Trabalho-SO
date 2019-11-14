@@ -125,6 +125,14 @@ ser ordenada.
 Se uma thread criada tiver uma prioridade menor do que uma que está na fila
 de espera ela deve dar yield.
 
+Donos de um lock esperando devem ser ordenados por prioridade.
+
+Se a prioridade de alguem que for adquirir um lock for maior do que a thread 
+dona atualmente, a thread dona deve aumentar a sua prioridade (doação).
+
+Ao devolver o lock, se não houver mais locks esperando, retornar a prioridade original, 
+caso contrario, a nova prioridade vai ser a maior dos locks.
+
 
 
 
@@ -195,8 +203,8 @@ A cada segundo refazer os cálculos.
 As funções para cálculo em ponto fixo foram descritas no documento
 e foram implementadas exatamente como descritas. Não foi necessário
 criar um tipo específico mas é necessário atenção com as operações
-sendo feitas já que ponto fixo ou inteiro ambos tem o mesmo tipo
-na implementação (int) escolhida apesar de serem interpretedos de 
+sendo feitas já que, ponto fixo e inteiro tem o mesmo tipo
+na implementação (int) escolhida, apesar de serem interpretedos de 
 maneira diferente.
 
 

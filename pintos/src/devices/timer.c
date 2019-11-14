@@ -92,7 +92,7 @@ timer_sleep (int64_t ticks)
   if (ticks < 0){
     ticks = ticks * -1;
   } 
-  int64_t final = timer_ticks () + ticks;
+  int64_t final = (timer_ticks () + ticks);
 
   ASSERT (intr_get_level () == INTR_ON);
 
