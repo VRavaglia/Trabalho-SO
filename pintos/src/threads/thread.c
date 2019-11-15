@@ -239,12 +239,43 @@ thread_tick (void)
           j = list_entry(elem, struct thread, allelem);
           if (j != idle_thread){
                 j->priority = thread_att_mlfqs (j);
-              
             }
         }
       
     }
     
+  }
+
+  if(DEBUG && 1 == 0){
+    // Atua em todas as threads a cada segundo
+    //if(DEBUG)printf("\n%d",timer_ticks()%TIMER_FREQ);
+    //printf("");
+    if(timer_ticks () % TIMER_FREQ/10 == 0){
+      size_t ready_threads = list_size(&ready_list);
+
+
+      // Conta a thread atual
+      if (t != idle_thread){
+        ready_threads++;
+      }
+      //printf("\nload average=%d.%02d.", thread_get_load_avg() / 100, thread_get_load_avg() % 100)
+
+      struct thread *j;
+      struct list_elem *elem = list_begin (&all_list);
+
+
+      // Para cada thread
+      for (; elem != list_end (&all_list); elem = list_next (elem)){
+          j = list_entry(elem, struct thread, allelem);
+          if (j != idle_thread){
+              if(j->name[0] != 'j'){
+                printf("\nnome|pri:%s|%d|", j->name,j->priority);  
+              }
+            }
+        }
+      //printf("  Atual: %s\n", thread_current()->name);
+      
+    }
   }  
 
   if(!list_empty(&ready_list)){
@@ -323,14 +354,14 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
-  if(DEBUG)printf("\nThread criada: %s, prioridade: %d\n", t->name, t->priority);
+  //if(DEBUG)printf("\nThread criada: %s, prioridade: %d\n", t->name, t->priority);
 
   /* Add to run queue. */
   thread_unblock (t);
 
   thread_maior_prioridade();
   
-  if(DEBUG)printf("\nThread atual dps da criacao: %s, p: %d\n", thread_current()->name, thread_current()->priority);
+  //if(DEBUG)printf("\nThread atual dps da criacao: %s, p: %d\n", thread_current()->name, thread_current()->priority);
 
   return tid;
 }
@@ -481,7 +512,7 @@ thread_set_priority (int new_priority)
   }
 
   if(thread_current ()->priority == 34){
-    if(DEBUG)printf("\nAtual %s, prioridade: %d", thread_current()->name, thread_current()->priority);
+    //if(DEBUG)printf("\nAtual %s, prioridade: %d", thread_current()->name, thread_current()->priority);
   }
 
   thread_current ()->priority = new_priority;

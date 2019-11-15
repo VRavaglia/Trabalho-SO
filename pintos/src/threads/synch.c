@@ -265,9 +265,8 @@ lock_release (struct lock *lock)
   {
     maior = list_entry (list_max (&t->locks, lock_maior_prioridade, NULL), struct lock, lock_elem);
     thread_set_priority (maior->maior_prioridade);
-    if(maior->maior_prioridade > 31){
-      //if(DEBUG) printf("\nSize: %d, prio: %d\n", list_size(&t->locks), maior->maior_prioridade);
-    }
+    //if(DEBUG) printf("\nSize: %d, prio: %d\n", list_size(&t->locks), maior->maior_prioridade);
+
   }
   thread_maior_prioridade();
 
@@ -281,7 +280,7 @@ lock_maior_prioridade (const struct list_elem *a_, const struct list_elem *b_, v
   a = list_entry (a_, struct lock, lock_elem);
   b = list_entry (b_, struct lock, lock_elem);
   
-  return (a->maior_prioridade > b->maior_prioridade);
+  return (a->maior_prioridade < b->maior_prioridade);
 }
 
 /* Returns true if the current thread holds LOCK, false
