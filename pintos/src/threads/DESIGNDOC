@@ -7,7 +7,7 @@
 ---- GROUP ----
 
 Victor Raposo victor.ravaglia@poli.ufrj.br
-Mateus da Silva Gilbert <email@domain.example>
+Mateus da Silva Gilbert gilbertmateus@poli.ufrj.br
 
 ---- PRELIMINARIES ----
 
@@ -159,23 +159,29 @@ int recent_cpu;                     /* Tempo de cpu utilizado recentemente*/
 timer  recent_cpu    priority   thread
 ticks   A   B   C   A   B   C   to run
 -----  --  --  --  --  --  --   ------
- 0
- 4
- 8
-12
-16
-20
-24
-28
-32
-36
+ 0     0   0   0   63  61  59   A
+ 4     4   0   0   62  61  59   A
+ 8     8   0   0   61  61  59   A
+12     12  0   0   60  61  59   B
+16     12  4   0   60  60  59   B
+20     12  8   0   60  59  59   A
+24     16  8   0   59  59  59   A
+28     20  8   0   58  59  59   B
+32     20  12  0   58  58  59   C
+36     20  12  4   58  58  58   C
 
 >> C3: Did any ambiguities in the scheduler specification make values
 >> in the table uncertain?  If so, what rule did you use to resolve
 >> them?  Does this match the behavior of your scheduler?
 
+Em caso de prioridades iguais foi escolhido que a thread a ser executada
+seria a que está sendo executada no momento. De fato, o scheduler proposto
+só troca a thread em execução caso ela não seja a de maior prioridade disponível.
+
 >> C4: How is the way you divided the cost of scheduling between code
 >> inside and outside interrupt context likely to affect performance?
+
+
 
 ---- RATIONALE ----
 
@@ -221,6 +227,12 @@ the quarter.
 >> In your opinion, was this assignment, or any one of the three problems
 >> in it, too easy or too hard?  Did it take too long or too little time?
 
+O trabalho é interessante mas em alguns casos se mostrou difícil de depurar.
+Nem sempre as interdependências entre as tarefas estão claras. A dinâmica
+de desenvolvimento em geral seguiu o ritmo de pouco tempo de desenvolvimento
+seguido de muito tempo de depuração, e pessoalmente, preferiríamos que
+fosse o contrário (estamos cientes do GDB e o utilizamos).
+
 >> Did you find that working on a particular part of the assignment gave
 >> you greater insight into some aspect of OS design?
 
@@ -228,7 +240,15 @@ the quarter.
 >> future quarters to help them solve the problems?  Conversely, did you
 >> find any of our guidance to be misleading?
 
+Deixar explícito que o gerenciamento de prioridades (troca em caso de criação de
+uma thread de alta prioridade) só funciona se a implementãção de locks e doação
+de prioridade estiverem funcionando.
+
 >> Do you have any suggestions for the TAs to more effectively assist
 >> students, either for future quarters or the remaining projects?
 
 >> Any other comments?
+
+Talvez substituir o trabalho por tarefas menores que não sejam interdependentes,
+talvez em outro ambiente que não o PintOS, como uma série de programas 
+em alguma linguagem de programação por exemplo.
