@@ -21,15 +21,14 @@ test_priority_sema (void)
   ASSERT (!thread_mlfqs);
 
   sema_init (&sema, 0);
-  thread_set_priority (PRI_MIN);
-  for (i = 0; i < 10; i++) 
+  thread_set_priority (PRI_MIN);  for (i = 0; i < 10; i++) 
     {
       int priority = PRI_DEFAULT - (i + 3) % 10 - 1;
       char name[16];
       snprintf (name, sizeof name, "priority %d", priority);
+      if(DEBUG)printf("\n\nAtual %s, prioridade: %d\n\n", thread_current()->name, thread_current()->priority);
       thread_create (name, priority, priority_sema_thread, NULL);
     }
-
   for (i = 0; i < 10; i++) 
     {
       sema_up (&sema);

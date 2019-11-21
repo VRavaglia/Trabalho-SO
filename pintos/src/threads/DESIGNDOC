@@ -89,9 +89,19 @@ da espera, reduzindo a complexidade de O(N) para O(1).
 /*struct thread*/
 int prioridade_original;             /* Prioridade antes da doacao*/
 
+
+/*struct lock*/
+struct list_elem lock_elem; /* Elemento lista de locks*/
+int maior_prioridade;       /* Maior prioridade a espera do lock*/
+
 >> B2: Explain the data structure used to track priority donation.
 >> Use ASCII art to diagram a nested donation.  (Alternately, submit a
 >> .png file.)
+
+Cada thread tem uma lista de locks que ela possui, e a prioridade da thread
+é definida pela maior prioriade entre os locks. Prioridades aninhadas ainda 
+não foram implementadas.
+
 
 ---- ALGORITHMS ----
 
@@ -99,19 +109,35 @@ int prioridade_original;             /* Prioridade antes da doacao*/
 >> a lock, semaphore, or condition variable wakes up first?
 
 Sempre que uma thread entra na lista de prontas a inserção é feita
-de maneira ordenada baseando-se na prioridade.
+de maneira ordenada baseando-se na prioridade. Alem disso, sempre
+que ocorre alguma mudança de prioridade (dentro ou fora de thread_set_priority()) uma função é chamada para garantir que a thread em execução é a de maior prioridade.
 
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
 
+Se a thread que está com o lock (holder) tiver uma prioridade menor do que
+a thread que tenta adquiri-lo (candidata) isso implica que a thread
+candidata depende do término da thread holder, e neste caso, a thread
+candidata deve doar sua prioridade. Alem disso, caso a prioridade
+da thread candidata seja maior que a maior prioridade do lock,
+a prioridade do lock deve ser atualizada.
+
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
+
+O lock é removido da lista de locks da thread, caso a lista esteja vazia, volta a ter a prioridade que tinha antes de qualquer doação. Caso contrário, cada lock tem a informação da maior prioridade de quem já tentou adquiri-lo e a prioridade da thread será definida pela maior delas 
 
 ---- SYNCHRONIZATION ----
 
 >> B6: Describe a potential race in thread_set_priority() and explain
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
+
+Caso uma thread esteja tentanto mudar sua prioridade e outra thread de mesma prioridade
+seja alocada de forma preenptiva antes da mudança, pode ser que a nova thread mude de prioridade
+no lugar da antiga. Isso foi evitado desabilitando interrupções. Não poderiam ter sido usados
+locks porque dentro dos locks há a necessidade de doação de prioridade então dentro deles haveria
+o mesmo problema de forma ciclica.
 
 ---- RATIONALE ----
 
@@ -181,6 +207,16 @@ só troca a thread em execução caso ela não seja a de maior prioridade dispon
 >> C4: How is the way you divided the cost of scheduling between code
 >> inside and outside interrupt context likely to affect performance?
 
+A implementação foi feita sem considerar o contexto, apenas implementando
+as funções descritas calculando os parâmetros pedidos a cada tick ou segundo.
+
+Caso todos os parâmetros fossem calculados a cada tick apesar de valores 
+mais precisos, isso afetaria muito a performace.
+
+Alem disso, uma possivel consideração é que, se as funções de mérito fossem
+calculadas em um contexto que pode ser interrompido, os valores de uso de cpu
+por exemplo estariam imprecisos e isso poderia causar um agendamento de tempo
+maior do que o necessário e isso poderia reduzir a performace.
 
 
 ---- RATIONALE ----
@@ -211,7 +247,9 @@ e foram implementadas exatamente como descritas. Não foi necessário
 criar um tipo específico mas é necessário atenção com as operações
 sendo feitas já que, ponto fixo e inteiro tem o mesmo tipo
 na implementação (int) escolhida, apesar de serem interpretedos de 
-maneira diferente.
+maneira diferente. Essa escolha ocasinou alguns problemas que
+poderiam ter sido evitados caso houvesse um tipo específico para
+representção em ponto fixo.
 
 
 

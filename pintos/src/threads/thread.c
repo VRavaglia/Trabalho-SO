@@ -250,7 +250,7 @@ thread_tick (void)
     // Atua em todas as threads a cada segundo
     //if(DEBUG)printf("\n%d",timer_ticks()%TIMER_FREQ);
     //printf("");
-    if(timer_ticks () % TIMER_FREQ/10 == 0){
+    if(timer_ticks () % TIMER_FREQ/20 == 0){
       size_t ready_threads = list_size(&ready_list);
 
 
@@ -511,9 +511,9 @@ thread_set_priority (int new_priority)
     return;
   }
 
-  if(thread_current ()->priority == 34){
-    //if(DEBUG)printf("\nAtual %s, prioridade: %d", thread_current()->name, thread_current()->priority);
-  }
+//if(thread_current ()->priority >= PRI_MIN){
+  //if(DEBUG)printf("\n\nAtual %s, prioridade: %d\n\n", thread_current()->name, thread_current()->priority);
+//}
 
   thread_current ()->priority = new_priority;
   thread_maior_prioridade();
