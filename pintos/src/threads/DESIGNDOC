@@ -100,7 +100,16 @@ int maior_prioridade;       /* Maior prioridade a espera do lock*/
 
 Cada thread tem uma lista de locks que ela possui, e a prioridade da thread
 é definida pela maior prioriade entre os locks. Prioridades aninhadas ainda 
-não foram implementadas.
+não foram implementadas mas poderiam ser implementadas da seguinte maneira:
+
+Poderia ser feita uma estrutura em grafo em que, cada nó representaria uma
+thread e cada aresta representaria a tentativa de adiquirir um lock. Sempre
+que houvesse uma tentativa de adquirir um lock, uma busca seria feita na árvore, 
+primeiro obtendo uma lista das threads conectadas pela tentativa de obtenção de lock
+em seguida atualizar a prioridade das threads dessa lista para que seja igual a maior
+delas. Na devolução do lock, se não houvesse nenhuma aresta no nó da thread
+voltar a prioridade original, caso contrário, repetir o algoritmo descrito acima
+mas sem a thread que liberou o lock conectada ao grafo.
 
 
 ---- ALGORITHMS ----
@@ -110,7 +119,8 @@ não foram implementadas.
 
 Sempre que uma thread entra na lista de prontas a inserção é feita
 de maneira ordenada baseando-se na prioridade. Alem disso, sempre
-que ocorre alguma mudança de prioridade (dentro ou fora de thread_set_priority()) uma função é chamada para garantir que a thread em execução é a de maior prioridade.
+que ocorre alguma mudança de prioridade (dentro ou fora de thread_set_priority())
+uma função é chamada para garantir que a thread em execução é a de maior prioridade.
 
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
@@ -125,7 +135,10 @@ a prioridade do lock deve ser atualizada.
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
 
-O lock é removido da lista de locks da thread, caso a lista esteja vazia, volta a ter a prioridade que tinha antes de qualquer doação. Caso contrário, cada lock tem a informação da maior prioridade de quem já tentou adquiri-lo e a prioridade da thread será definida pela maior delas 
+O lock é removido da lista de locks da thread, caso a lista esteja vazia, volta a 
+ter a prioridade que tinha antes de qualquer doação. Caso contrário, cada lock tem a 
+informação da maior prioridade de quem já tentou adquiri-lo e a prioridade da thread 
+será definida pela maior delas. 
 
 ---- SYNCHRONIZATION ----
 
